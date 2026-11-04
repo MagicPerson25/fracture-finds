@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<!--
+  CHANGE LOG
+  2026-10-21  Live version: card data and images load from Scryfall when opened; Tagger tags snapshot from 2026-10-21.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Fracture Finds</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Marcellus+SC&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* =====================================================================
+   SITE SETTINGS
+   Layout: reading column for prose, responsive grid of real card images,
+   a diagonal "fracture" line as the one signature motif.
+   ===================================================================== */
+:root{
+  --bg:#F1F0F5; --surface:#FFFFFF; --surface-2:#E7E5EF; --ink:#1C1A2B; --muted:#5D5A70; --line:#CFCBDC;
+  --accent:#5638C9; --accent-ink:#FFFFFF; --accent-soft:#E4DEFA;
+  --novel:#B4570E; --novel-soft:#FBE9D8;
+  --m-w:#F3EBC8; --m-w-ink:#3A3320; --m-u:#2F6BC0; --m-u-ink:#FFFFFF; --m-b:#2E2A33; --m-b-ink:#EDE8F2;
+  --m-r:#C8442B; --m-r-ink:#FFFFFF; --m-g:#2C7A47; --m-g-ink:#FFFFFF; --m-c:#B9B5C2; --m-c-ink:#24212E;
+  --f-display:"Marcellus SC","Trajan Pro",Georgia,serif;
+  --f-body:"Source Serif 4",Georgia,"Times New Roman",serif;
+  --f-ui:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+  --radius:10px; --header-h:60px;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#14131C; --surface:#1E1C2A; --surface-2:#282537; --ink:#ECEAF4; --muted:#A6A2BA; --line:#38344B;
+    --accent:#A592FF; --accent-ink:#14131C; --accent-soft:#2E2750; --novel:#F0A766; --novel-soft:#3A2A1C;
+    --m-w:#E8DFB6; --m-u:#4D86D6; --m-b:#0B0A0F; --m-b-ink:#E6E0EE; --m-r:#DA5A40; --m-g:#3C9660; --m-c:#8F8A9C; --m-c-ink:#14131C;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#14131C; --surface:#1E1C2A; --surface-2:#282537; --ink:#ECEAF4; --muted:#A6A2BA; --line:#38344B;
+  --accent:#A592FF; --accent-ink:#14131C; --accent-soft:#2E2750; --novel:#F0A766; --novel-soft:#3A2A1C;
+  --m-w:#E8DFB6; --m-u:#4D86D6; --m-b:#0B0A0F; --m-b-ink:#E6E0EE; --m-r:#DA5A40; --m-g:#3C9660; --m-c:#8F8A9C; --m-c-ink:#14131C;
+  color-scheme:dark;
+}
+
+/* =====================================================================
+   ENGINE: shared styles
+   ===================================================================== */
+*{box-sizing:border-box}
+html{scroll-padding-top:calc(var(--header-h) + 16px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-ui);font-size:15px;line-height:1.55}
+img{max-width:100%}
+[hidden]{display:none!important}
+a{color:var(--accent)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+.wrap{max-width:1240px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+
+.site-header{position:sticky;top:0;z-index:20;background:var(--surface);border-bottom:1px solid var(--line)}
+.site-header .wrap{display:flex;align-items:center;gap:16px;min-height:var(--header-h);position:relative}
+.brand{font-family:var(--f-display);font-size:1.3rem;color:var(--ink);text-decoration:none;display:flex;align-items:center;gap:10px;white-space:nowrap}
+.nav{margin-left:auto}
+.nav ul{list-style:none;margin:0;padding:0;display:flex;gap:4px}
+.nav a{display:block;padding:8px 12px;border-radius:999px;color:var(--muted);text-decoration:none;font-weight:500}
+.nav a:hover{color:var(--ink);background:var(--surface-2)}
+.nav a[aria-current="page"]{color:var(--accent-ink);background:var(--accent)}
+.menu-btn{display:none;margin-left:auto;background:var(--surface-2);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:8px 12px;font:500 14px var(--f-ui);cursor:pointer}
+@media (max-width:820px){
+  .menu-btn{display:inline-flex}
+  .nav{position:absolute;left:0;right:0;top:100%;background:var(--surface);border-bottom:1px solid var(--line);margin:0}
+  .nav[data-open="false"]{display:none}
+  .nav ul{flex-direction:column;padding:8px max(16px,env(safe-area-inset-left,0px)) 12px}
+  .nav a{border-radius:8px}
+}
+main{padding-block:28px 64px}
+section[data-page]{display:none}
+section[data-page].is-active{display:block}
+
+h1,h2,h3{text-wrap:balance}
+.eyebrow{font:500 12px/1.2 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:0 0 10px}
+.page-head{max-width:70ch;margin-bottom:22px}
+.page-head h1{font-family:var(--f-display);font-weight:400;font-size:clamp(2rem,5vw,2.8rem);line-height:1.1;margin:0 0 12px}
+.page-head p{font-family:var(--f-body);font-size:1.08rem;color:var(--muted);margin:0 0 8px}
+.prose{max-width:68ch;font-family:var(--f-body);font-size:1.05rem}
+.prose h2{font-family:var(--f-display);font-weight:400;font-size:1.6rem;margin:32px 0 8px}
+.prose p{margin:0 0 14px}
+
+.hero{position:relative;overflow:hidden;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:clamp(22px,4vw,44px);margin-bottom:32px}
+.hero::after{content:"";position:absolute;inset:0;background:linear-gradient(115deg,transparent 0 58%,var(--accent-soft) 58% 58.6%,transparent 58.6% 63%,var(--accent-soft) 63% 100%);pointer-events:none}
+.hero > *{position:relative;z-index:1}
+.hero h1{font-family:var(--f-display);font-weight:400;font-size:clamp(2.1rem,6vw,3.6rem);line-height:1.04;margin:0 0 14px;max-width:16ch}
+.hero p{font-family:var(--f-body);font-size:1.12rem;max-width:54ch;margin:0 0 20px;color:var(--muted)}
+.facts{display:flex;flex-wrap:wrap;gap:8px 22px;font:500 13px var(--f-mono);margin:0 0 22px;padding:0;list-style:none}
+.facts b{color:var(--accent);font-variant-numeric:tabular-nums}
+.btn-row{display:flex;flex-wrap:wrap;gap:10px}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border-radius:999px;font:600 14px var(--f-ui);text-decoration:none;border:1px solid var(--accent);cursor:pointer;background:transparent;color:var(--accent)}
+.btn.primary{background:var(--accent);color:var(--accent-ink)}
+
+.section-title{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:8px 0 6px}
+.section-title h2{font-family:var(--f-display);font-weight:400;font-size:1.7rem;margin:0}
+.section-sub{font-family:var(--f-body);color:var(--muted);margin:0 0 16px;max-width:70ch}
+
+/* load state */
+.loadbox{background:var(--surface);border:1px dashed var(--line);border-radius:var(--radius);padding:22px;color:var(--muted);margin-bottom:20px}
+.loadbox.err{border-color:var(--novel);color:var(--ink)}
+
+/* card tiles (real images) */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:22px 18px;align-items:start}
+.tile{display:flex;flex-direction:column;gap:8px;min-width:0}
+.tile-btn{display:block;padding:0;border:0;background:none;cursor:zoom-in;border-radius:4.75% / 3.5%;line-height:0}
+.cardimg{display:block;width:100%;height:auto;aspect-ratio:488/680;max-width:100%;border-radius:4.75% / 3.5%;background:var(--surface-2);object-fit:cover;box-shadow:0 1px 2px rgba(0,0,0,.18),0 6px 18px rgba(28,26,43,.12)}
+@media (prefers-reduced-motion:no-preference){ .tile-btn .cardimg{transition:transform .18s ease} .tile-btn:hover .cardimg{transform:translateY(-3px) rotate(-.6deg)} }
+.tile-meta{display:flex;justify-content:space-between;gap:8px;align-items:baseline;font:500 12px var(--f-mono);color:var(--muted);padding:0 2px}
+.tile-name{font:600 14px/1.3 var(--f-ui);color:var(--ink);margin:0;padding:0 2px}
+.score{color:var(--novel);font-variant-numeric:tabular-nums;white-space:nowrap}
+.tags{display:flex;flex-wrap:wrap;gap:6px;padding:0 2px}
+.tag{font:500 12px var(--f-mono);padding:3px 8px;border-radius:999px;background:var(--surface-2);color:var(--ink);border:1px solid var(--line);cursor:pointer;text-align:left}
+.tag:hover{border-color:var(--accent)}
+.tag.novel{background:var(--novel-soft);border-color:var(--novel);color:var(--ink)}
+.tag .n{color:var(--muted);margin-left:4px}
+.tag.novel .n{color:var(--novel)}
+.tag[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.tag[aria-pressed="true"] .n{color:var(--accent-ink)}
+
+/* toolbar */
+.toolbar{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:12px;margin-bottom:12px}
+.field{display:flex;flex-direction:column;gap:4px;min-width:0}
+.field > label,.field > span{font:500 12px var(--f-mono);color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
+.field input,.field select{font:15px var(--f-ui);color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;min-width:0}
+.field.grow{flex:1 1 220px}
+.check{display:flex;gap:8px;align-items:center;font:500 14px var(--f-ui);color:var(--ink);padding-bottom:9px;cursor:pointer}
+.colors{display:flex;gap:6px;flex-wrap:wrap}
+.color-btn{border:2px solid transparent;border-radius:50%;padding:2px;background:none;cursor:pointer;line-height:0}
+.color-btn[aria-pressed="true"]{border-color:var(--accent)}
+.pip{display:inline-grid;place-items:center;width:1.3em;height:1.3em;border-radius:50%;font:600 11.5px/1 var(--f-mono);background:var(--m-c);color:var(--m-c-ink);vertical-align:-.2em}
+.color-btn .pip{width:26px;height:26px;font-size:12px}
+.pip.W{background:var(--m-w);color:var(--m-w-ink)} .pip.U{background:var(--m-u);color:var(--m-u-ink)} .pip.B{background:var(--m-b);color:var(--m-b-ink)} .pip.R{background:var(--m-r);color:var(--m-r-ink)} .pip.G{background:var(--m-g);color:var(--m-g-ink)}
+.status{font:500 13px var(--f-mono);color:var(--muted);margin:0 0 16px;display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.activetags{display:flex;gap:6px;flex-wrap:wrap}
+.linkish{background:none;border:0;padding:0;color:var(--accent);font:inherit;text-decoration:underline;cursor:pointer}
+.empty{background:var(--surface);border:1px dashed var(--line);border-radius:var(--radius);padding:28px;text-align:center;color:var(--muted);grid-column:1/-1}
+
+/* tag table */
+.table-wrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius)}
+table{border-collapse:collapse;width:100%;min-width:560px}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font:500 12px var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);position:sticky;top:0;background:var(--surface)}
+td.num{font:500 14px var(--f-mono);font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+th.num{text-align:right}
+td .cardlinks{display:flex;flex-wrap:wrap;gap:4px 10px;font-size:14px}
+.bar{display:inline-block;height:6px;border-radius:3px;background:var(--novel);vertical-align:middle;margin-left:8px}
+.badge{font:600 11px var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--novel);border:1px solid var(--novel);border-radius:4px;padding:1px 5px;margin-left:6px;white-space:nowrap}
+
+/* pairs */
+.pair{display:grid;grid-template-columns:minmax(0,1fr) 28px minmax(0,1fr);gap:14px;align-items:start;margin-bottom:34px;max-width:620px}
+.pair h2{grid-column:1/-1;font-family:var(--f-display);font-weight:400;font-size:1.4rem;margin:0}
+.pair svg{width:28px;height:100%;min-height:200px;align-self:stretch}
+.pairs-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,460px),1fr));gap:8px 40px}
+
+/* mechanics */
+.mech{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:22px;align-items:start;padding:24px 0;border-top:1px solid var(--line)}
+.mech h2{font-family:var(--f-display);font-weight:400;font-size:1.6rem;margin:0 0 6px}
+.mech .kind{font:500 12px var(--f-mono);color:var(--accent);letter-spacing:.1em;text-transform:uppercase}
+.mech .reminder{font-family:var(--f-body);font-style:italic;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin:10px 0}
+.mini-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+@media (max-width:820px){.mech{grid-template-columns:1fr}}
+
+/* detail dialog */
+dialog{border:1px solid var(--line);border-radius:14px;padding:0;background:var(--surface);color:var(--ink);width:min(920px,calc(100vw - 24px));max-height:calc(100vh - 24px)}
+dialog::backdrop{background:rgba(12,10,20,.6)}
+.dlg{display:grid;grid-template-columns:minmax(0,320px) minmax(0,1fr);gap:24px;padding:22px;overflow:auto;max-height:calc(100vh - 26px)}
+.dlg-close{position:absolute;top:10px;right:10px;background:var(--surface-2);border:1px solid var(--line);color:var(--ink);border-radius:999px;width:36px;height:36px;font-size:18px;cursor:pointer}
+.dlg h2{font-family:var(--f-display);font-weight:400;font-size:1.7rem;margin:0 40px 4px 0}
+.dlg .type{font:500 13px var(--f-ui);color:var(--muted);margin:0 0 12px}
+.oracle{font-family:var(--f-body);font-size:1.02rem;white-space:pre-line;margin:0 0 12px}
+.face + .face{border-top:1px solid var(--line);padding-top:12px}
+.face h3{font:600 14px var(--f-ui);margin:0 0 4px}
+.dlg h4{font:500 12px var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:16px 0 8px}
+.dlg-links{display:flex;flex-wrap:wrap;gap:8px 18px;font-weight:500;margin-top:16px}
+.legend{font-size:13px;color:var(--muted);margin:8px 0 0}
+@media (max-width:700px){.dlg{grid-template-columns:1fr}.dlg .imgcol{max-width:260px}}
+
+.site-footer{border-top:1px solid var(--line);padding-block:20px;color:var(--muted);font-size:13px}
+.site-footer p{margin:0;max-width:90ch}
+</style>
+</head>
+<body>
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="#home" aria-label="Fracture Finds, home">
+      <svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true"><path d="M13 1 25 13 13 25 1 13Z" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M8 4 15 12 11 14 18 22" fill="none" stroke="var(--accent)" stroke-width="1.8" stroke-linejoin="round"/></svg>
+      Fracture Finds
+    </a>
+    <button class="menu-btn" id="menuBtn" type="button" aria-expanded="false" aria-controls="siteNav">Menu</button>
+    <nav class="nav" id="siteNav" data-open="false" aria-label="Main"><ul id="navList"></ul></nav>
+  </div>
+</header>
+
+<main class="wrap">
+<div class="loadbox" id="loadbox" role="status">Loading Reality Fracture from Scryfall…</div>
+
+<!-- =====================================================================
+     PAGES
+     ===================================================================== -->
+<section data-page="home" data-title="Spotlight">
+  <div class="hero">
+    <p class="eyebrow">Reality Fracture · FRA · released Oct 2, 2026</p>
+    <h1>The strangest new cards in Magic</h1>
+    <p>Every card in the set is ranked by how rare its Scryfall Tagger tags are across all of Magic. A tag that only one or two cards in the game's history share is a strong sign of a genuinely new effect.</p>
+    <ul class="facts">
+      <li>Cards <b id="fCards">–</b></li>
+      <li>Distinct tags <b id="fTags">–</b></li>
+      <li>Rare effects (20 or fewer cards ever) <b id="fFirsts">–</b></li>
+    </ul>
+    <div class="btn-row">
+      <a class="btn primary" href="#cards">Browse every card</a>
+      <a class="btn" href="#tags">See the brand-new tags</a>
+    </div>
+  </div>
+  <div class="section-title"><h2>Most novel cards</h2><a href="#cards">See all</a></div>
+  <p class="section-sub">Highlighted tags are shared by 20 or fewer cards in all of Magic. The number on each tag is how many cards in the whole game have it.</p>
+  <div class="grid" id="spotlightGrid"></div>
+</section>
+
+<section data-page="cards" data-title="Card Gallery">
+  <div class="page-head">
+    <p class="eyebrow">Card gallery</p>
+    <h1>The whole set, filterable</h1>
+    <p>Click a card for its full text and every tag. Click a tag to filter; picking several shows cards that have all of them.</p>
+  </div>
+  <div class="toolbar">
+    <div class="field grow"><label for="q">Search name, text or tag</label><input id="q" type="search" placeholder="e.g. empower jace, sacrifice, cast from exile" autocomplete="off"></div>
+    <div class="field"><span>Color</span><div class="colors" id="colorBtns"></div></div>
+    <div class="field"><label for="rarity">Rarity</label>
+      <select id="rarity"><option value="">Any</option><option value="mythic">Mythic</option><option value="rare">Rare</option><option value="uncommon">Uncommon</option><option value="common">Common</option></select></div>
+    <div class="field"><label for="sort">Sort</label>
+      <select id="sort"><option value="novel">Most novel</option><option value="num">Set order</option><option value="name">Name</option><option value="mv">Mana value</option></select></div>
+    <label class="check"><input type="checkbox" id="onlyNovel"> Only cards with a rare tag</label>
+  </div>
+  <div class="status" id="status" aria-live="polite"></div>
+  <div class="grid" id="galleryGrid"></div>
+</section>
+
+<section data-page="tags" data-title="Tag Explorer">
+  <div class="page-head">
+    <p class="eyebrow">Tag explorer</p>
+    <h1>Which effects are new?</h1>
+    <p>Every Tagger tag found on Reality Fracture cards, with how many cards carry it in this set and in all of Magic. When the two numbers match, no card before this set had that effect.</p>
+  </div>
+  <div class="toolbar">
+    <div class="field grow"><label for="tq">Filter tags</label><input id="tq" type="search" placeholder="e.g. jace, loyalty, exile" autocomplete="off"></div>
+    <div class="field"><label for="tmax">Show tags with at most</label>
+      <select id="tmax"><option value="20">20 cards in Magic</option><option value="60">60 cards</option><option value="100">100 cards</option><option value="1000000">Any number</option></select></div>
+  </div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Tag</th><th class="num">In FRA</th><th class="num">In all Magic</th><th>Cards in this set</th></tr></thead>
+    <tbody id="tagRows"></tbody>
+  </table></div>
+</section>
+
+<section data-page="pairs" data-title="Echoed Pairs">
+  <div class="page-head">
+    <p class="eyebrow">Echoed Pairs</p>
+    <h1>Same character, two realities</h1>
+    <p>Reality Fracture prints familiar faces twice, as two separate cards showing who they became in different worlds. They aren't double-faced and don't need each other.</p>
+  </div>
+  <div class="pairs-list" id="pairsList"></div>
+</section>
+
+<section data-page="mechanics" data-title="Mechanics">
+  <div class="page-head">
+    <p class="eyebrow">Mechanics</p>
+    <h1>What's new in the rules</h1>
+    <p>The set's mechanics in plain words, with live examples from the set.</p>
+  </div>
+  <article class="mech" id="empower-jace">
+    <div class="prose">
+      <span class="kind">New keyword action</span>
+      <h2>Empower Jace</h2>
+      <p class="reminder">Put that many loyalty counters on a Jace token you control. If you don't control one, first create a blue Jace planeswalker token with "−1: Surveil 1" and "−3: Draw a card."</p>
+      <p>The token starts at 0 loyalty, so the counters you put on it are all it has. Your real, nontoken Jace cards can't be empowered. Many cards then hand extra loyalty abilities to every planeswalker you control, so the little token can pick up strong options.</p>
+    </div>
+    <div class="mini-grid" data-mech="empower jace"></div>
+  </article>
+  <article class="mech" id="heartwood">
+    <div class="prose">
+      <span class="kind">New token</span>
+      <h2>Heartwood</h2>
+      <p>A red and green artifact token with "{T}: Add {R} or {G}." Unlike a Treasure, you keep it after using it, so it works as a permanent mana rock that also counts for artifact payoffs.</p>
+    </div>
+    <div class="mini-grid" data-mech="heartwood token"></div>
+  </article>
+  <article class="mech" id="prepare">
+    <div class="prose">
+      <span class="kind">Returning from Secrets of Strixhaven</span>
+      <h2>Prepare</h2>
+      <p>A Prepare card is a creature with a spell attached. While the creature is prepared, you may cast a copy of that spell, which unprepares it. If the creature leaves the battlefield first, the stored spell is gone.</p>
+    </div>
+    <div class="mini-grid" data-mech="prepared"></div>
+  </article>
+  <article class="mech" id="flashback">
+    <div class="prose">
+      <span class="kind">Returning keyword</span>
+      <h2>Flashback</h2>
+      <p>Cast the card from your graveyard for its flashback cost, then exile it. Timing rules stay the same.</p>
+    </div>
+    <div class="mini-grid" data-mech="flashback"></div>
+  </article>
+</section>
+
+<section data-page="about" data-title="About">
+  <div class="page-head"><p class="eyebrow">About this site</p><h1>Sources and notes</h1></div>
+  <div class="prose">
+    <p>Fracture Finds is an unofficial fan showcase of Reality Fracture. Card names, text, images and prices load live from the Scryfall API each time you open the page, so they always match Scryfall.</p>
+    <h2>How novelty is scored</h2>
+    <p>Tags come from Scryfall Tagger, the community project that labels what each card does. The tags were captured on <span id="snapDate"></span>, together with how many cards in all of Magic carry each tag. Each tag adds points based on how rare it is: a tag no other card has adds about 18, one shared by 5 cards adds 11, one shared by 20 adds 5, and tags on 60 or more cards add nothing. Tags about names, art or cycles are left out. New tags added on Tagger after that date won't show here until the snapshot is refreshed.</p>
+    <h2>Links</h2>
+    <p><a href="https://scryfall.com/sets/fra" target="_blank" rel="noopener">Reality Fracture on Scryfall</a> · <a href="https://tagger.scryfall.com/" target="_blank" rel="noopener">Scryfall Tagger</a> · <a href="https://magic.wizards.com/en/news/feature/reality-fracture-release-notes" target="_blank" rel="noopener">Official release notes</a></p>
+    <p>Card data and images courtesy of Scryfall. Magic: The Gathering and all card names and images are property of Wizards of the Coast. This page is not affiliated with or endorsed by Wizards of the Coast or Scryfall.</p>
+  </div>
+</section>
+</main>
+
+<dialog id="dlg" aria-labelledby="dlgTitle">
+  <button class="dlg-close" type="button" id="dlgClose" aria-label="Close">×</button>
+  <div class="dlg" id="dlgBody"></div>
+</dialog>
+
+<footer class="site-footer"><div class="wrap"><p>Unofficial fan page. Card data and images from Scryfall, tags from Scryfall Tagger. Magic: The Gathering © Wizards of the Coast.</p></div></footer>
+
+<script>
+/* =====================================================================
+   TAG SNAPSHOT  (Scryfall Tagger oracle tags, keyed by collector number)
+   ===================================================================== */
+const SNAP = /*SNAPSHOT*/{"date":"October 21, 2026","tags":["1mv-tutor-to-top","5c set mechanic commander","activate from graveyard","activate from hand","activated ability","additional cost","adds multiple mana","aesthetic counter","alliteration","alternate win condition","alternative cost","animate artifact","animate enchantment","anthem","artifact count matters","attack trigger","attacking matters","attacking matters-self","attacking opponents matters","ball lightning","banish","behold","block trigger","blood artist ability","bombard-self","bottomless mana sink","burn any","burn creature","burn planeswalker","burn player","burn player-each","burn with set's mechanic","burst draw","buttstrike","cantrip","card types in graveyard matter","cards in graveyard matter","cast on resolution","cast trigger-other","cast trigger-self","cast trigger-you","castable from exile","castable from graveyard","casting restriction","cda-power","cda-toughness","cda-toughness+1","cheaper than mv","cheat death","cheat death-self","color-choose-land","combat arbiter","combat trick","conditional tapland","consult-onto-battlefield","convoke","copy from graveyard","copy-aura","copy-creature","copy-instant","copy-legendary","copy-nonland","copy-self","copy-sorcery","copy-spell","cost ignorer","cost increaser","cost-reducer-noncreature","cost-reducer-planeswalker","counter fuel-pp","counter increaser","counter lord","counter preservation-self","counters matter","counterspell","counterspell with set mechanic","counterspell-bounce","counterspell-creature","counterspell-noncreature","counterspell-soft","cranial plating","creates bigger body","creature count matters","creature engine","creaturefall","creatureland","curiosity","cycle-fra-ally-hoser","cycle-fra-annex","cycle-fra-c-hybrid","cycle-fra-charm","cycle-fra-commons","cycle-fra-draft-signpost","cycle-fra-elder-sphinx","cycle-fra-landcycler","cycle-fra-lorwyn-five","cycle-fra-r-two-color","cycle-fra-u-hybrid","cycle-fra-way-of-the","cycle-fra-wedge-pair","cycle-mid-slowland","damage increaser","death trigger","death trigger-self","delayed trigger","demilich effect","discard","discard outlet","discard outlet-legendary","discard outlet-random","discard to exile","discard with set's mechanic","discarded type matters","discount-self","disenchant/naturalize","disintegrate","ditch hand","doesn't untap","donate mana","donate token","doom blade","drain creature","drain life","draw engine","drawback","egg","empty library","enlarge","enrage","enters in company","evasion","exhaust","exile-self","explore-like","extra untap","ferocious","finality counter","firebreathing","flicker-creature","flicker-planeswalker","flowstone","force draw","forestfall","four loyalty abilities","free sacrifice outlet","free-cast-another","freeze-artifact","freeze-creature","fulfilled futureshift","full refund","future mechanic reference","futureshifted","gains deathtouch","gains double strike","gains first strike","gains flying","gains haste","gains hexproof","gains lifelink","gains menace","gains pp counters","gains trample","gains vigilance","gamble","giant growth","giant growth with set mechanic","gifts ungiven","gives castable from exile","gives deathtouch","gives double strike","gives first strike","gives flashback","gives flying","gives haste","gives hexproof","gives indestructible","gives lifelink","gives loyalty ability","gives mana ability","gives mm counters","gives pp counters","gives pp counters to all","gives reach","gives split second","gives tap ability","gives trample","gives unblockable","gives vigilance","graveyard fuel","graveyard fuel-creature","graveyard seal","group slug","hand size matters","has identical token","hate empty hand","hate-activation","hate-artifact","hate-attacker","hate-black","hate-blocker","hate-blue","hate-counterspell","hate-discard","hate-etb","hate-flying","hate-graveyard","hate-green","hate-high-mv","hate-high-pt","hate-legendary","hate-low-power","hate-low-toughness","hate-noncreature","hate-planeswalker","hate-red","hate-set-mechanic","hate-white","hate-wide","hatebear","heroic","humble","impulse-permanent","infusion","instant loyalty ability","intervening if clause","jump","keyword anthem","land count matters","land ramp","landfall","leaves body behind","lhurgoyf","life for cards","life-and-death-trigger-self","lifegain","lifegain matters","lockdown-creature","long term impulsive draw","loot","low mana value matters","mana dork","mana increaser","mana producer","mana sink","mana value matters","martyr","mass reanimation","mass shrink","mathy name","mechanical foreshadow","mill-exile","mill-opponent","mill-self","mini refund","mirror gallery","mixed subtypes","modal","modal inverse choices","morbid","more expensive than mv","mountainfall","mulch","multi land ramp","multi removal","multiple bodies","multiple targets","mutual sacrifice","name matters","namesake spell","non mana ability mana","non-mana ward","nonbasic-basic-land-type","one-sided fight","opaline effect","opponent loses life","opponent-discard matters","out of color token","overrun","paradox","passive ability","per-player","pinger","plainsfall","planeswalkerfall","play additional land","polymorph","portmanteau","power boost to all","power matters-individual","pp counters matter","prepare matters","prevent trigger","pridemate","protects-all","protects-creature","protects-land","protects-permanent","protects-planeswalker","prowess-like","pseudo-proliferate","punisher","pure draw","ramp","reanimate-cast","reanimate-creature","reanimate-land","reanimate-nonland","reanimate-planeswalker","reanimate-self","recursion-instant","recursion-sorcery","references keyword","reflexive trigger","refund","regrowth-creature","regrowth-land","regrowth-legendary","regrowth-permanent","regrowth-self","relentless","removal-artifact","removal-battle","removal-bounce","removal-creature","removal-destroy","removal-enchantment","removal-exile","removal-fight","removal-nonland","removal-permanent","removal-planeswalker","removal-sacrifice","removal-toughness","removal-tuck","remove counters-other","remove counters-you","remove-from-stack","renew","repeatable artifact tokens","repeatable card advantage","repeatable creature tokens","repeatable crime","repeatable impulsive draw","repeatable lifegain","repeatable loot","repeatable noncreature tokens","repeatable plunder","repeatable pp counters","repeatable prepare","repeatable proliferate","repeatable pure draw","repeatable removal","repeatable rescue","repeatable rummage","repeatable sacrifice outlet","repeatable surveil","repeatable treasures","repeated keyword","rescue-permanent","restock-any","restock-to-bottom","restricted mana","rhystic","ritual","rummage","saboteur","sacrifice outlet-artifact","sacrifice outlet-creature","sacrifice outlet-land","sacrifice outlet-planeswalker","sacrifice self","scales with mana value","scales with power","school name","self-discard matters","self-replacement effect","shade pump","shapechange","shapesharing","shrink","silence","single english word name","single target instant/sorcery","single-minded color hate","sneak-creature","sneak-planeswalker","soul warden ability","spot removal","staple with set's mechanic","supercycle-mmmm-enrager","surge","surveil","swap removal","sweeper","sweeper-one-sided","symmetrical","synergy-1/1","synergy-artifact","synergy-artifact-creature","synergy-burn","synergy-equipment","synergy-graveyard-cast","synergy-instant","synergy-island","synergy-legendary","synergy-low-power","synergy-mill","synergy-mountain","synergy-noncreature","synergy-planeswalker","synergy-pw-jace","synergy-red","synergy-scry","synergy-solo-attack","synergy-sorcery","synergy-surveil","synergy-token","synergy-token-creature","tap fuel-artifact","tapland","tapper-creature","temporary token","theft-cast","theft-creature","theft-planeswalker","third draw matters","thoughtseize","threshold","token replacer","toll","tome","tormenting voice","toughness boost to all","trigger from graveyard","triggered ability","trumpet blast","tuck-self","tunneling","turns off defender","turns off defender-self","tutor-card","tutor-creature-sphinx","tutor-enchantment","tutor-land-any","tutor-land-basic","tutor-land-to-battlefield","tutor-planeswalker","tutor-to-battlefield","tutor-to-graveyard","tutor-to-hand","tutor-to-top","twiddle","typal-angel","typal-choose","typal-thopter","typal-wizard","unblockable","undergrowth","unheroic","unique enchant target","unique mana cost","unique p/t","unique type line","unnoted tracked information","untapper","untapper-creature","untapper-land","untaps self","untracked indefinite effect","utility land","utility mana rock","vanilla bean","variable-power","virtual french vanilla","virtual vanilla","vivid","ward","wheel-one-sided","wheel-symmetrical-optional","wish","young pyromancer ability"],"counts":[0,33,348,575,10047,885,513,326,4285,71,1304,73,13,542,190,2163,1206,1561,27,45,154,38,413,40,141,791,849,2262,1220,1819,119,297,644,23,654,100,654,522,125,233,1279,483,403,64,231,170,0,2023,312,152,27,9,1398,184,63,112,66,37,370,150,49,12,315,145,196,957,71,11,7,100,84,0,44,1316,550,169,17,48,34,140,50,222,325,87,624,55,242,5,5,10,5,5,10,5,5,10,10,5,10,10,5,30,1605,896,1263,36,589,1331,5,48,89,197,118,574,234,64,233,43,38,182,84,94,423,1582,1768,353,8,313,127,486,5469,103,1362,15,102,121,44,295,155,30,115,323,9,10,188,397,10,185,13,103,0,0,117,101,202,352,341,70,141,127,2171,247,134,6,307,142,15,766,176,145,277,18,468,655,160,273,222,16,92,228,1662,198,94,2,141,514,183,271,455,177,50,847,283,39,36,33,195,364,153,448,96,148,136,9,208,419,93,91,185,21,90,21,44,59,128,277,120,44,66,133,124,38,44,5,2180,218,520,276,624,290,160,110,312,35,2620,243,110,115,418,232,443,57,962,1874,1007,581,66,47,29,13,148,457,1075,347,8,76,812,88,130,1058,6,172,159,675,891,1531,74,491,1570,196,55,106,164,18,863,34,516,86,45,102,471,732,3,3,42,36,134,1248,194,444,5,7,56,298,971,36,43,125,81,48,164,3298,2295,146,530,68,25,19,267,97,96,51,288,713,331,42,7,60,197,13,1193,607,439,5519,1735,1040,585,149,378,202,1963,435,594,144,44,562,44,153,592,2745,1453,3628,171,1488,238,455,134,1769,0,69,1395,1748,108,135,909,121,205,93,36,26,46,232,254,69,284,997,351,986,285,64,1378,372,691,19,168,361,297,238,94,167,37,1279,4643,129,89,3,56,5410,1683,4,28,343,123,946,237,862,10,1068,148,63,244,91,555,90,271,99,96,95,318,250,11,174,28,102,552,21,231,111,97,503,677,205,201,231,11,8,152,118,10,212,156,36,973,142,16231,56,60,30,13,73,101,1,36,44,418,319,44,490,32,605,51,70,23,89,8,119,192,136,57,30,310,35,2164,240,766,521,171,175,469,699,249,0,0,1279,1566,31,212,98,11,54,41],"cards":{"1":[39,130,3,302,466,41,270,132,178,149,134,329,331,473,47,263,184,8],"2":[382,391,225,172,8,276,165],"3":[180,234,130,167,8,382,160],"4":[8,391,337,276],"5":[222,343,133,224,463,355,339],"6":[256,434,474,187,316,180,175,294,160],"7":[40,138],"8":[239,180,304,42,382,132,259,10],"9":[264,235,463],"10":[103,160,72],"11":[160,181,434,69,347,462],"12":[264,444,449,94,391,3,276],"13":[453,324,323,394],"14":[450,446,0],"15":[20,328,434,387],"16":[180,382,265,8,42,10,259,132],"17":[382,392,197,323,141,324,387],"18":[323,330,326,387,382,391,206,200,87,383],"19":[15,17,345,82,350,123,276,355],"20":[246,306,8],"21":[130,25,4,376,287,432],"22":[256,382,120,234,34,208],"23":[292,160,347,476,362],"24":[382,207,391,387,323,324,330],"25":[75,21,259,391,382,410,5],"26":[301,8,406,32,382],"27":[40,147,408,337,420],"28":[412,415,391,323,244,434,167,322,387,382],"29":[420,257,238,474,465,434,8,451],"30":[77,79,382,379,256,209,52],"31":[434,420,236,220,290,387,323,373,215],"32":[268,391,301,223,410],"33":[474,434,391,34],"34":[382,257,220,377,52],"35":[123,40,333,328,350,345,408,387,355],"36":[74,216,198,382,87,383],"37":[391,34,388],"38":[312,238,112,420,265,147,337,301],"39":[391,434,167],"40":[130,15,17,224,344,62,49,230,462],"41":[301,441,447,188,267,319,65,132],"42":[130,439,415,4,412,243,355],"43":[340,341,192,123,32,181,322,323,320,263,280,387,350,265,351,4,279,434,127],"44":[245,201,391,301,434,4,268],"45":[130,444,3,47,449,140,94],"46":[382,387,323,322],"47":[130,40,408,167,116,32,107,248,478],"48":[233,3,234,130,444,449,94],"49":[123,141,341,224,350,274,348,382,167,232,258,32],"50":[382,234,331,323,330,244,387,207],"51":[232,30,301],"52":[252,434,427,8,231],"53":[433,130,308,224,258],"54":[323,29,326,330,122,191,382,387,373],"55":[479,166],"56":[382,387,332,52],"57":[387,312,263,265,323,4,330,324,280],"58":[332,382,387,248],"59":[393,391,301,323,326,395,82,217,276],"60":[434,473,168],"61":[474,106,434,8],"62":[382,244,304,307,391,8,276],"63":[256,372,232,301,393,332,32],"64":[177,191,281,122,343,434,350,123,29,276,355],"65":[281,122,29,130,15,8,343,191,17,462],"66":[367,324,382,369,259,330,323,387,5],"67":[106,426,382,391,111,276,248],"68":[120,234,382,200,214,87,330,383],"69":[314,337],"70":[427,252,167,462,248],"71":[256,323,330,387,324,232,391,301,268,382,276],"72":[268,8,26,387,185,226,434],"73":[34,170],"74":[47,27,28,3,444,449,180,387,382,265,94],"75":[382,52,237],"76":[268,40,408,160,347,298],"77":[224,340,433,181,455,347,399,318,243,280],"78":[473,434,277,8,80,161],"79":[130,449,434,473,440,109,163,107],"80":[130,428,397,340,416],"81":[4,437],"82":[198,206,115,27,387,382,87,383,28],"83":[58,382,421,173,264,409,224],"84":[256,27,28,387,394],"85":[382,4,167,29,353,8],"86":[129,434,473],"87":[54,409,4,243,285,384,385],"88":[130,399,434,287,462],"89":[26,391,387,276,31],"90":[40,408,167,364],"91":[104,407,363,167,40,408,241],"92":[137,154,25,4],"93":[473,414,171,434,402,309,310],"94":[107,26,387,312,8,473,462],"95":[27,28,391,301,387,276,31],"96":[113,404,27,28,387,382],"97":[391,434,473,8,276],"98":[259,132,42,10],"99":[114,324,387,4,245,301,209,462],"100":[365,315,434,167,443,448,339],"101":[272,256,409,28,265,387],"102":[220,383,272,214,28,216,265,387,87],"103":[102,242,73,269,6,7,381],"104":[386,434,240,4],"105":[361,167,240,278,470,253,4],"106":[128,434,443,262,389,462,460,445],"107":[253,434,4,366,160,347,161,157,156,354,276,470],"108":[15,4,16,185,168],"109":[434,4,347,350,160,345,123,25,276,355],"110":[145,82,381],"111":[11,12,2,318,459],"112":[317,234,382],"113":[301,444,103,445,228],"114":[261,234,221,8],"115":[8,3,323,204,324,387,473,259],"116":[249,150,35,151,46,44,45,472,193,231,148],"117":[164,182,465,382],"118":[340,262,434,280,462],"119":[434,473,180,444,449,47,3,94,160],"120":[376,161,4,476,25,362,462],"121":[233,130,253,338,4,137,25,93,345,470,14],"122":[180,229,345,227,350,434,123,177,355,160],"123":[343,318,2,89],"124":[235,286,4,343,434,350,123,243,176,185,341,92,161,158],"125":[435,382,180,52,170,256,89],"126":[387,300,333,328,29,382,92],"127":[34,473,27,28,256,387,129,434,92,462],"128":[130,412,415,181,434,93,347,460,160],"129":[412,130,434,415,180,347,92,375],"130":[167,180,234,382,462,89,160],"131":[369,446,447,65,96],"132":[391,76,322,432,323,387,287,52,382,34,336,90],"133":[130,391,167,81,89],"134":[168,102,52,48,294,89],"135":[19,434,301,124,370,86,96],"136":[40,408,2,308,399,92,136],"137":[281,191,130,25,173,340,29,15,16,93,4,156],"138":[27,387,204,180,185,164,90,363,382],"139":[167,470,89,253],"140":[362,235,338,343,130,476,93,345,242],"141":[410,130,434,327,387,8,162,92,462],"142":[224,426,110,427,422,167,474,96],"143":[360,167,252,359,224,4,97,248],"144":[312,228,130,473,252,305,92],"145":[434,8,2,308,412,84,415,96,355,136],"146":[167,412,287,415,391,434,129,97],"147":[231,264,42,132,259,401,8,10,92],"148":[38,244,8,343,96,429],"149":[20,328,387,4,434,244,108,353,430,96],"150":[26,387,52,173,90,170,168,382],"151":[167,341,29,382,281,224,97],"152":[29,382,106,426,96],"153":[382,391,268,187,180,89,34],"154":[160,418,4,434,368,347,470,96],"155":[387,252,34,79,78,90,332,382,52],"156":[427,155,167,252,89,462,248],"157":[278,34,375,42,132,431,10,259,89],"158":[328,387,324,265,181,92],"159":[130,105,145,35,56,306,303,224,244,61,93,265,57],"160":[296,174,175,180,327,387,90,265,382,34,234,52],"161":[234,289,226,167,382,180,187,8,97,71,162,160],"162":[323,423,326,330,387,244,104,424,138,139,96],"163":[122,121,26,434,4,289,387,92],"164":[156,155,399,29,167,382,8,89,462,460],"165":[338,345,224,167,243,97,302],"166":[4,155,225,17,15,205,341],"167":[473,387,324,234,325,330,321,130,256,434,8,320],"168":[290,40,243,4,8,64],"169":[4,132,323,324,238,434,393],"170":[434,427,29,191,122,355,125,24],"171":[391,474,434,276],"172":[333,245,323,330,387,4,8,255,462],"173":[172,4,15,16,343],"174":[253,4,353,470,430,243],"175":[409,91,4],"176":[4,100],"177":[409,88,4],"178":[91,409],"179":[4,378,58,60,243,254,85],"180":[4,100],"181":[469,290,4,243,16,341],"182":[409,91,4],"183":[409,88,4],"184":[409,91,4],"185":[4,100],"186":[4,100],"187":[419,4,224,142,127,469],"188":[50,4,419,370,180,8,469],"189":[4,100],"190":[409,88,4],"191":[21,4,469,410,271,53,243,123,350,345,268,355],"192":[409,88,4],"193":[91,409,4],"194":[88,409,4],"195":[4,13,287,279,340,347,292,343,434,432,95],"196":[40,400,219,350,123],"197":[33,113,438,460],"199":[343,282,180,347,341,434,160],"202":[352,4,358,130],"203":[340,338,130,434,412,415,99],"206":[172,225,4,130,51,409,289,341],"207":[301,177,98,391,340,276,434],"208":[350,434,409,235,276,123,98,355],"209":[180,70,25,404,347,289,4,160],"210":[413,169,15,16,380,195,311,280,153],"211":[344,84,467,4,434],"212":[143,123,269,4,408,147,350,420,40,146,242,253,341,8,361,133,95,355],"213":[86,434,406,301,126,9,436],"214":[130,67,408],"215":[420,434,4,341,243,147,465,265,99,467,280],"216":[403,123,350,410,4,345,197,104,15,227,250,251,247,95,355],"217":[224,425,350,130,340,4,104,86,25],"218":[434,412,415,160,350,123,347],"219":[273,357,408,40,130,462,350],"220":[402,414,183],"221":[456,405,186,396],"222":[113,473,408,130,40,390],"223":[59,63,391,104,40,301,177,98],"224":[98,224,409,391,123,350],"225":[],"226":[474,379,36,434,256,391,52],"227":[40,458,160,347],"228":[130,2,189,308,160,311,462],"229":[190,266,279,194,351,340,106,341,332,387,280,276,4,350,123,95,379],"230":[106,270,84,29,213,191,281],"231":[434,131,304,307,84,283,252,160,95],"232":[427,367,369,144,4,137,461,462],"233":[473,434,334,335,330,387,99,462],"234":[23,341,281,409,29,160,347,399,8],"235":[43,427,124,130,3,332,387,52,47,473,379],"236":[474,434,168,180,409,52,152,160],"237":[29,434,106,281,191,374,280,202,275],"238":[391,301,177,367,434,98,276,354,340],"239":[123,102,98,350,276,355,409],"240":[312,266,323,387,263,367,369,457,231,409],"241":[461,471],"242":[340,287,279,173,477,82,27,417,409,116,394,107,4,351,32,123,95,434],"243":[84,372,434],"244":[143,6,4,242,313,191,351,342,26,37,40,341,269,281,387,95],"245":[289,226,173,4,180,347,463,341,160],"246":[130,15,180,374,413,16,347,353,280,160],"247":[25,4,340,129,81,434,130,99,311],"248":[269,281,434,240,260,191,29],"249":[4,346,368,366,123],"250":[129,130,4,25,137,341,434,14],"251":[226,173,156],"252":[40,408,22,29,210,211,199,281],"253":[40,408,101,399],"254":[269,350,434,123,313,276,177,242,98,355],"255":[177,434,276,391,301,27,28,387,351,341,29,265,281,8,98,31],"256":[55,40,408,287,411,298],"257":[160,347,4,224,25,180,289,299,52,311,99,462,349],"258":[44,434,444,449,267,462],"259":[123,277,432,84,279,104,135,466,340,18,15,341,313,350,4,95,83],"260":[372,113,185,226,288],"261":[134,416,129,81,464,434],"262":[4,240,6,288],"263":[174,295,4,226,315,243,339,293],"264":[107,442,449,474,8,434],"265":[157,201,468],"266":[347,374,292,434,8,202,234,462],"267":[409,343,284,98,391,301,434,228,276],"268":[301,391,177,98,340,276,434],"269":[327,387,180,347,434,25,4,8,265,341],"270":[102,409,4,347,159,367,369,160,343,99],"271":[474,434,179,387,263,332,36,371,265,99],"272":[434,397,475,32,301,473,8,47],"273":[8,224,15,16,465,186,177,340,81,99],"274":[84,434,180,160,347,341,463,99],"275":[338,226,173,130,480,40,454,408,99],"276":[243,68,1,4,409,95,349],"277":[398,8,226,187,302,356,40,408,480],"278":[387,324,329,392,224,473,118,119,227,96],"279":[395,196,291,203,218],"280":[117,397,467,124,40]}}/*END*/;
+
+/* =====================================================================
+   ENGINE
+   ===================================================================== */
+(function(){
+  const SITE_NAME = "Fracture Finds", SET = "fra";
+  const NOVEL_MAX = 20;
+  const pages = Array.from(document.querySelectorAll("section[data-page]"));
+  const navList = document.getElementById("navList"), nav = document.getElementById("siteNav"), menuBtn = document.getElementById("menuBtn");
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s == null ? "" : s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+  /* ---------- routing ---------- */
+  pages.forEach(p => { const li = document.createElement("li"), a = document.createElement("a"); a.href = "#" + p.dataset.page; a.textContent = p.dataset.title; li.appendChild(a); navList.appendChild(li); });
+  function setMenu(open){ nav.dataset.open = open ? "true" : "false"; menuBtn.setAttribute("aria-expanded", String(open)); menuBtn.textContent = open ? "Close" : "Menu"; }
+  menuBtn.addEventListener("click", () => setMenu(nav.dataset.open !== "true"));
+  function route(){
+    const raw = decodeURIComponent(location.hash.slice(1));
+    let page = pages.find(p => p.dataset.page === raw), anchor = null;
+    if (!page && raw){ const el = document.getElementById(raw); const host = el && el.closest("section[data-page]"); if (host){ page = host; anchor = el; } }
+    if (!page) page = pages[0];
+    pages.forEach(p => p.classList.toggle("is-active", p === page));
+    navList.querySelectorAll("a").forEach(a => a.getAttribute("href") === "#" + page.dataset.page ? a.setAttribute("aria-current","page") : a.removeAttribute("aria-current"));
+    document.title = page.dataset.title + " · " + SITE_NAME;
+    setMenu(false);
+    if (anchor) anchor.scrollIntoView(); else window.scrollTo(0,0);
+  }
+  window.addEventListener("hashchange", route);
+  route();
+
+  /* ---------- snapshot decode ---------- */
+  const TAGNAMES = SNAP.tags, TAGCOUNT = SNAP.counts;
+  const tagsByNum = {}; Object.keys(SNAP.cards).forEach(n => tagsByNum[n] = SNAP.cards[n].map(i => TAGNAMES[i]));
+  const globalCount = {}; TAGNAMES.forEach((t,i) => globalCount[t] = TAGCOUNT[i]);
+  $("snapDate").textContent = SNAP.date;
+  /* Rarer tags weigh more: a tag on 1 card adds about 18 points, on 5 cards 11, on 20 cards 5, on 60+ cards nothing. */
+  function weight(n){ return n > 0 ? Math.max(0, Math.log10(60 / n)) : 0; }
+  /* Tags about names, art, cycles or trivia rather than what a card does. They never count toward novelty. */
+  const TRIVIA = /^(cycle-|supercycle-)|^(alliteration|mathy name|portmanteau|single english word name|school name|unique type line|unique mana cost|unique p\/t|aesthetic counter|mixed subtypes|mechanical foreshadow|future mechanic reference|futureshifted|fulfilled futureshift|mirror gallery|vanilla bean|namesake spell|unnoted tracked information|untracked indefinite effect)$/;
+  const isNovel = t => !TRIVIA.test(t) && globalCount[t] > 0 && globalCount[t] <= NOVEL_MAX;
+
+  /* ---------- helpers ---------- */
+  function pips(str){
+    return esc(str).replace(/\{([^}]+)\}/g, (m, s) => {
+      const k = s.replace("/", ""); const cls = /^[WUBRG]$/.test(s) ? s : "";
+      return '<span class="pip ' + cls + '" title="{' + esc(s) + '}">' + (s === "T" ? "⟳" : esc(s.length > 2 ? k : s)) + '</span>';
+    });
+  }
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  function imgOf(c, size){ size = size || "normal"; return (c.image_uris && c.image_uris[size]) || (c.card_faces && c.card_faces[0].image_uris && c.card_faces[0].image_uris[size]) || ""; }
+  function oracleOf(c){ return c.oracle_text != null ? c.oracle_text : (c.card_faces || []).map(f => f.oracle_text || "").join("\n"); }
+  function colorKeys(c){ const cs = c.colors || (c.card_faces && c.card_faces[0].colors) || []; return cs.length ? cs : ["C"]; }
+  const tagLink = t => "https://scryfall.com/search?q=" + encodeURIComponent("otag:" + t.replace(/ /g, "-"));
+
+  let CARDS = [], byNum = {}, byName = {};
+
+  /* ---------- load from Scryfall ---------- */
+  async function load(){
+    const box = $("loadbox");
+    box.className = "loadbox"; box.hidden = false; box.textContent = "Loading Reality Fracture from Scryfall…";
+    try {
+      let url = "https://api.scryfall.com/cards/search?q=" + encodeURIComponent("set:" + SET) + "&order=set&unique=cards";
+      const out = [];
+      while (url){
+        const res = await fetch(url, {headers:{Accept:"application/json"}});
+        if (!res.ok) throw new Error("Scryfall answered " + res.status);
+        const j = await res.json();
+        out.push(...j.data);
+        box.textContent = "Loading Reality Fracture from Scryfall… " + out.length + " of " + j.total_cards;
+        url = j.has_more ? j.next_page : null;
+        if (url) await sleep(110);
+      }
+      CARDS = out.filter(c => !/Basic Land/.test(c.type_line || "")).map(c => {
+        const tags = tagsByNum[c.collector_number] || [];
+        const novel = tags.filter(isNovel).sort((a,b) => globalCount[a] - globalCount[b]);
+        return { c, num:c.collector_number, name:c.name, tags, novel, score: Math.round(10 * tags.filter(t => !TRIVIA.test(t)).reduce((s,t) => s + weight(globalCount[t]), 0)) };
+      });
+      CARDS.forEach(x => { byNum[x.num] = x; byName[x.name] = x; });
+      box.hidden = true;
+      renderAll();
+    } catch (e) {
+      box.className = "loadbox err";
+      box.innerHTML = "Couldn't reach Scryfall (" + esc(e.message) + "). Check your internet connection, then <button type=\"button\" class=\"linkish\" id=\"retry\">try again</button>.";
+      $("retry").addEventListener("click", load);
+    }
+  }
+
+  /* ---------- tiles ---------- */
+  function tagChip(t, pressed){
+    const n = globalCount[t], nov = isNovel(t);
+    return '<button type="button" class="tag' + (nov ? " novel" : "") + '" data-tag="' + esc(t) + '"' + (pressed ? ' aria-pressed="true"' : '') +
+      ' title="' + (n ? n + (n === 1 ? " card" : " cards") + " in all of Magic have this tag" : "") + '">' + esc(t) + (n ? '<span class="n">' + n + '</span>' : '') + '</button>';
+  }
+  function tileHTML(x, opts){
+    opts = opts || {};
+    const show = opts.allTags ? x.tags : x.novel.slice(0, 4);
+    return '<div class="tile">' +
+      '<button type="button" class="tile-btn" data-open="' + esc(x.num) + '" aria-label="Show details for ' + esc(x.name) + '">' +
+        '<img class="cardimg" src="' + esc(imgOf(x.c)) + '" alt="' + esc(x.name) + '" loading="lazy" width="488" height="680"></button>' +
+      (opts.compact ? '' :
+        '<div class="tile-meta"><span>#' + esc(x.num) + ' · ' + esc(x.c.rarity) + '</span>' + (x.score ? '<span class="score" title="Novelty score">✦ ' + x.score + '</span>' : '') + '</div>' +
+        (show.length ? '<div class="tags">' + show.map(t => tagChip(t)).join("") + '</div>' : '')) +
+    '</div>';
+  }
+
+  /* ---------- spotlight ---------- */
+  function renderSpotlight(){
+    const top = CARDS.slice().sort((a,b) => b.score - a.score || a.num.localeCompare(b.num, undefined, {numeric:true})).slice(0, 12);
+    $("spotlightGrid").innerHTML = top.map(x => tileHTML(x)).join("");
+    const setTags = new Set(CARDS.flatMap(x => x.tags));
+    $("fCards").textContent = CARDS.length;
+    $("fTags").textContent = setTags.size;
+    $("fFirsts").textContent = Array.from(setTags).filter(isNovel).length;
+  }
+
+  /* ---------- gallery ---------- */
+  const state = { q:"", colors:new Set(), tags:new Set(), rarity:"", sort:"novel", onlyNovel:false };
+  [["W","White"],["U","Blue"],["B","Black"],["R","Red"],["G","Green"],["C","Colorless"]].forEach(([k,label]) => {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "color-btn"; b.setAttribute("aria-pressed","false"); b.setAttribute("aria-label", label);
+    b.innerHTML = '<span class="pip ' + (k === "C" ? "" : k) + '" aria-hidden="true">' + k + '</span>';
+    b.addEventListener("click", () => { state.colors.has(k) ? state.colors.delete(k) : state.colors.add(k); b.setAttribute("aria-pressed", String(state.colors.has(k))); renderGallery(); });
+    $("colorBtns").appendChild(b);
+  });
+  $("q").addEventListener("input", e => { state.q = e.target.value.trim().toLowerCase(); renderGallery(); });
+  $("rarity").addEventListener("change", e => { state.rarity = e.target.value; renderGallery(); });
+  $("sort").addEventListener("change", e => { state.sort = e.target.value; renderGallery(); });
+  $("onlyNovel").addEventListener("change", e => { state.onlyNovel = e.target.checked; renderGallery(); });
+
+  function renderGallery(){
+    if (!CARDS.length) return;
+    let list = CARDS.filter(x => {
+      if (state.q){ const hay = (x.name + " " + x.c.type_line + " " + oracleOf(x.c) + " " + x.tags.join(" ")).toLowerCase(); if (!hay.includes(state.q)) return false; }
+      if (state.colors.size && !colorKeys(x.c).some(k => state.colors.has(k))) return false;
+      if (state.rarity && x.c.rarity !== state.rarity) return false;
+      if (state.onlyNovel && !x.novel.length) return false;
+      for (const t of state.tags) if (!x.tags.includes(t)) return false;
+      return true;
+    });
+    const byNumCmp = (a,b) => a.num.localeCompare(b.num, undefined, {numeric:true});
+    if (state.sort === "novel") list.sort((a,b) => b.score - a.score || byNumCmp(a,b));
+    if (state.sort === "num") list.sort(byNumCmp);
+    if (state.sort === "name") list.sort((a,b) => a.name.localeCompare(b.name));
+    if (state.sort === "mv") list.sort((a,b) => (a.c.cmc || 0) - (b.c.cmc || 0) || a.name.localeCompare(b.name));
+    $("galleryGrid").innerHTML = list.length ? list.map(x => tileHTML(x)).join("") : '<div class="empty">No cards match these filters. Try removing a tag or color.</div>';
+    const active = state.tags.size || state.colors.size || state.q || state.rarity || state.onlyNovel;
+    $("status").innerHTML = '<span>Showing ' + list.length + ' of ' + CARDS.length + ' cards</span>' +
+      (state.tags.size ? '<span class="activetags">' + Array.from(state.tags).map(t => tagChip(t, true)).join("") + '</span>' : '') +
+      (active ? '<button type="button" class="linkish" id="clearAll">Clear filters</button>' : '');
+    const clr = $("clearAll");
+    if (clr) clr.addEventListener("click", () => {
+      state.q = ""; state.colors.clear(); state.tags.clear(); state.rarity = ""; state.onlyNovel = false;
+      $("q").value = ""; $("rarity").value = ""; $("onlyNovel").checked = false;
+      $("colorBtns").querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed","false"));
+      renderGallery();
+    });
+  }
+
+  /* ---------- tag explorer ---------- */
+  $("tq").addEventListener("input", renderTags);
+  $("tmax").addEventListener("change", renderTags);
+  function renderTags(){
+    if (!CARDS.length) return;
+    const q = $("tq").value.trim().toLowerCase(), max = +$("tmax").value;
+    const inSet = {};
+    CARDS.forEach(x => x.tags.forEach(t => (inSet[t] = inSet[t] || []).push(x)));
+    const rows = Object.keys(inSet).filter(t => !TRIVIA.test(t) && globalCount[t] > 0 && globalCount[t] <= max && (!q || t.includes(q)))
+      .sort((a,b) => globalCount[a] - globalCount[b] || inSet[b].length - inSet[a].length || a.localeCompare(b));
+    $("tagRows").innerHTML = rows.length ? rows.map(t => {
+      const n = globalCount[t], k = inSet[t].length, first = n === k;
+      return '<tr><td><button type="button" class="tag' + (isNovel(t) ? " novel" : "") + '" data-tag="' + esc(t) + '">' + esc(t) + '</button>' + (first ? '<span class="badge">New in FRA</span>' : '') +
+        '<br><a href="' + tagLink(t) + '" target="_blank" rel="noopener" style="font-size:12px">all ' + n + ' on Scryfall ↗</a></td>' +
+        '<td class="num">' + k + '</td><td class="num">' + n + '<span class="bar" style="width:' + Math.max(4, Math.round(60 * k / n)) + 'px" title="Share that is from this set"></span></td>' +
+        '<td><div class="cardlinks">' + inSet[t].slice(0, 12).map(x => '<button type="button" class="linkish" data-open="' + esc(x.num) + '">' + esc(x.name) + '</button>').join("") + (k > 12 ? ' <span>+' + (k - 12) + ' more</span>' : '') + '</div></td></tr>';
+    }).join("") : '<tr><td colspan="4">No tags match.</td></tr>';
+  }
+
+  /* ---------- echoed pairs ---------- */
+  function renderPairs(){
+    const groups = {};
+    CARDS.filter(x => /Legendary/.test(x.c.type_line) && +x.num >= 180 && !/^Way of/.test(x.name)).forEach(x => {
+      const key = x.name.split(/[ ,]/)[0]; (groups[key] = groups[key] || []).push(x);
+    });
+    const crack = '<svg viewBox="0 0 28 200" preserveAspectRatio="none" aria-hidden="true"><path d="M14 0 6 40 20 80 8 120 19 160 12 200" fill="none" stroke="var(--accent)" stroke-width="2" vector-effect="non-scaling-stroke"/></svg>';
+    $("pairsList").innerHTML = Object.keys(groups).filter(k => groups[k].length === 2).sort().map(k => {
+      const [a,b] = groups[k];
+      return '<div class="pair" id="pair-' + esc(k.toLowerCase()) + '"><h2>' + esc(k) + '</h2>' + tileHTML(a, {compact:true}) + crack + tileHTML(b, {compact:true}) + '</div>';
+    }).join("");
+  }
+
+  /* ---------- mechanics examples ---------- */
+  function renderMech(){
+    document.querySelectorAll(".mini-grid[data-mech]").forEach(box => {
+      const needle = box.dataset.mech;
+      const hits = CARDS.filter(x => oracleOf(x.c).toLowerCase().includes(needle)).sort((a,b) => b.score - a.score).slice(0, 3);
+      box.innerHTML = hits.map(x => tileHTML(x, {compact:true})).join("");
+    });
+  }
+
+  /* ---------- detail dialog ---------- */
+  const dlg = $("dlg");
+  function openCard(num){
+    const x = byNum[num]; if (!x) return;
+    const c = x.c, faces = c.card_faces && !c.oracle_text ? c.card_faces : [c];
+    const sorted = x.tags.slice().sort((a,b) => (globalCount[a] || 1e9) - (globalCount[b] || 1e9));
+    const price = c.prices && (c.prices.usd || c.prices.eur);
+    $("dlgBody").innerHTML =
+      '<div class="imgcol"><img class="cardimg" src="' + esc(imgOf(c, "large") || imgOf(c)) + '" alt="' + esc(x.name) + '"></div>' +
+      '<div><h2 id="dlgTitle">' + esc(x.name) + '</h2>' +
+      '<p class="type">#' + esc(x.num) + ' · ' + esc(c.rarity) + (price ? ' · $' + esc(c.prices.usd || "") + (c.prices.usd ? "" : "€" + esc(c.prices.eur)) : '') + (x.score ? ' · <span class="score">novelty ✦ ' + x.score + '</span>' : '') + '</p>' +
+      faces.map(f => '<div class="face">' + (faces.length > 1 ? '<h3>' + esc(f.name) + ' ' + pips(f.mana_cost || "") + '</h3>' : '<p class="type">' + pips(f.mana_cost || "") + ' &nbsp;' + esc(f.type_line) + '</p>') +
+        (faces.length > 1 ? '<p class="type">' + esc(f.type_line) + '</p>' : '') +
+        '<p class="oracle">' + pips(f.oracle_text || "") + '</p>' +
+        (f.power != null ? '<p class="type">' + esc(f.power) + '/' + esc(f.toughness) + '</p>' : f.loyalty != null ? '<p class="type">Loyalty ' + esc(f.loyalty) + '</p>' : '') + '</div>').join("") +
+      '<h4>Tagger tags (' + x.tags.length + ')</h4>' +
+      (sorted.length ? '<div class="tags">' + sorted.map(t => tagChip(t)).join("") + '</div><p class="legend">Number = cards in all of Magic with that tag. Highlighted = 20 or fewer. Click a tag to filter the gallery.</p>' : '<p class="legend">No Tagger tags yet.</p>') +
+      '<div class="dlg-links"><a href="' + esc(c.scryfall_uri) + '" target="_blank" rel="noopener">Open on Scryfall ↗</a><a href="https://tagger.scryfall.com/card/' + SET + '/' + esc(x.num) + '" target="_blank" rel="noopener">Open on Tagger ↗</a></div></div>';
+    if (typeof dlg.showModal === "function"){ if (!dlg.open) dlg.showModal(); } else dlg.setAttribute("open", "");
+    $("dlgClose").focus();
+  }
+  function closeDlg(){ if (dlg.open){ typeof dlg.close === "function" ? dlg.close() : dlg.removeAttribute("open"); } }
+  $("dlgClose").addEventListener("click", closeDlg);
+  dlg.addEventListener("click", e => { if (e.target === dlg) closeDlg(); });
+
+  /* ---------- global clicks ---------- */
+  document.addEventListener("click", e => {
+    const op = e.target.closest("[data-open]");
+    if (op){ openCard(op.dataset.open); return; }
+    const chip = e.target.closest(".tag[data-tag]");
+    if (!chip) return;
+    const t = chip.dataset.tag;
+    closeDlg();
+    if (chip.closest('section[data-page="cards"]')){ state.tags.has(t) ? state.tags.delete(t) : state.tags.add(t); renderGallery(); return; }
+    state.tags = new Set([t]); renderGallery();
+    if (location.hash === "#cards") route(); else location.hash = "cards";
+  });
+
+  function renderAll(){ renderSpotlight(); renderGallery(); renderTags(); renderPairs(); renderMech(); }
+  load();
+})();
+</script>
+</body>
+</html>
