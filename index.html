@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <!--
   CHANGE LOG
+  2026-11-11  Redesign: fractured character-art banner, Cinzel display type, glass entry cards.
   2026-11-11  User-research update: plain-English tag names, "why it's unusual" line, browse by deck theme, goal-based entry points.
   2026-10-21  Live version: card data and images load from Scryfall when opened; Tagger tags snapshot from 2026-10-21.
 -->
@@ -11,7 +12,7 @@
 <title>Fracture Finds</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Marcellus+SC&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800&family=Marcellus+SC&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
 /* =====================================================================
    SITE SETTINGS
@@ -24,7 +25,8 @@
   --novel:#B4570E; --novel-soft:#FBE9D8;
   --m-w:#F3EBC8; --m-w-ink:#3A3320; --m-u:#2F6BC0; --m-u-ink:#FFFFFF; --m-b:#2E2A33; --m-b-ink:#EDE8F2;
   --m-r:#C8442B; --m-r-ink:#FFFFFF; --m-g:#2C7A47; --m-g-ink:#FFFFFF; --m-c:#B9B5C2; --m-c-ink:#24212E;
-  --f-display:"Marcellus SC","Trajan Pro",Georgia,serif;
+  --f-display:"Cinzel","Marcellus SC","Trajan Pro",Georgia,serif;
+  --hero-bg:#0c0a14; --hero-ink:#f4f0ff; --hero-muted:#c9c2e6; --hero-glow:#9b82ff; --hero-gold:#e9c46a;
   --f-body:"Source Serif 4",Georgia,"Times New Roman",serif;
   --f-ui:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
   --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
@@ -60,7 +62,7 @@ a{color:var(--accent)}
 
 .site-header{position:sticky;top:0;z-index:20;background:var(--surface);border-bottom:1px solid var(--line)}
 .site-header .wrap{display:flex;align-items:center;gap:16px;min-height:var(--header-h);position:relative}
-.brand{font-family:var(--f-display);font-size:1.3rem;color:var(--ink);text-decoration:none;display:flex;align-items:center;gap:10px;white-space:nowrap}
+.brand{font-family:var(--f-display);font-weight:700;letter-spacing:.04em;font-size:1.25rem;color:var(--ink);text-decoration:none;display:flex;align-items:center;gap:10px;white-space:nowrap}
 .nav{margin-left:auto}
 .nav ul{list-style:none;margin:0;padding:0;display:flex;gap:4px}
 .nav a{display:block;padding:8px 12px;border-radius:999px;color:var(--muted);text-decoration:none;font-weight:500}
@@ -81,17 +83,40 @@ section[data-page].is-active{display:block}
 h1,h2,h3{text-wrap:balance}
 .eyebrow{font:500 12px/1.2 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:0 0 10px}
 .page-head{max-width:70ch;margin-bottom:22px}
-.page-head h1{font-family:var(--f-display);font-weight:400;font-size:clamp(2rem,5vw,2.8rem);line-height:1.1;margin:0 0 12px}
+.page-head h1{font-family:var(--f-display);font-weight:600;font-size:clamp(2rem,5vw,2.8rem);line-height:1.1;margin:0 0 12px}
 .page-head p{font-family:var(--f-body);font-size:1.08rem;color:var(--muted);margin:0 0 8px}
 .prose{max-width:68ch;font-family:var(--f-body);font-size:1.05rem}
-.prose h2{font-family:var(--f-display);font-weight:400;font-size:1.6rem;margin:32px 0 8px}
+.prose h2{font-family:var(--f-display);font-weight:600;font-size:1.6rem;margin:32px 0 8px}
 .prose p{margin:0 0 14px}
 
-.hero{position:relative;overflow:hidden;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:clamp(22px,4vw,44px);margin-bottom:32px}
-.hero::after{content:"";position:absolute;inset:0;background:linear-gradient(115deg,transparent 0 58%,var(--accent-soft) 58% 58.6%,transparent 58.6% 63%,var(--accent-soft) 63% 100%);pointer-events:none}
-.hero > *{position:relative;z-index:1}
-.hero h1{font-family:var(--f-display);font-weight:400;font-size:clamp(2.1rem,6vw,3.6rem);line-height:1.04;margin:0 0 14px;max-width:16ch}
-.hero p{font-family:var(--f-body);font-size:1.12rem;max-width:54ch;margin:0 0 20px;color:var(--muted)}
+/* ---- hero: fractured character art ---- */
+.hero{position:relative;isolation:isolate;overflow:hidden;border-radius:18px;background:var(--hero-bg);color:var(--hero-ink);min-height:min(640px,88vh);margin-bottom:40px;display:flex;flex-direction:column;justify-content:flex-end;box-shadow:0 24px 60px -24px rgba(40,20,90,.55)}
+.shards{position:absolute;top:-4%;bottom:-4%;right:-7%;width:70%;display:flex;gap:7px;transform:skewX(-13deg);z-index:-2;background:linear-gradient(180deg,var(--hero-glow),#5a3fd6 55%,var(--hero-gold));}
+.shard{position:relative;flex:1;overflow:hidden;background:#1d1830;margin:0}
+.shard img{position:absolute;top:0;left:-35%;width:170%;height:100%;object-fit:cover;transform:skewX(13deg) scale(1.08);filter:saturate(1.08) brightness(.92);transition:transform .6s ease,filter .4s ease}
+.shard:hover img{transform:skewX(13deg) scale(1.16);filter:saturate(1.15) brightness(1.05)}
+.shard figcaption{position:absolute;left:14%;right:-10%;bottom:7%;transform:skewX(13deg);font:500 11px/1.35 var(--f-ui);color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.9);opacity:.9}
+.shard figcaption b{display:block;font:700 12.5px/1.2 var(--f-display);letter-spacing:.06em}
+.hero::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(90deg,var(--hero-bg) 0%,rgba(12,10,20,.94) 34%,rgba(12,10,20,.55) 52%,rgba(12,10,20,0) 70%),linear-gradient(0deg,rgba(12,10,20,.92) 0%,rgba(12,10,20,0) 38%)}
+.hero-inner{padding:clamp(28px,5vw,56px) clamp(22px,4.5vw,56px) 0;max-width:680px}
+.hero .eyebrow{color:var(--hero-gold);letter-spacing:.22em;display:flex;align-items:center;gap:10px}
+.hero .eyebrow::before{content:"";width:34px;height:1px;background:var(--hero-gold)}
+.hero h1{font-family:var(--f-display);font-weight:700;font-size:clamp(2.4rem,6vw,4.6rem);line-height:1.02;letter-spacing:.01em;margin:6px 0 18px;background:linear-gradient(180deg,#ffffff 30%,#cbbcff 100%);-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:0 2px 30px rgba(155,130,255,.25)}
+.hero h1 em{font-style:normal;background:linear-gradient(180deg,#fff1c7 10%,var(--hero-gold) 90%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero p.lead{font-family:var(--f-body);font-size:1.15rem;line-height:1.55;max-width:46ch;margin:0 0 18px;color:var(--hero-muted)}
+.hero .facts b{color:var(--hero-gold)}
+.hero .facts{color:var(--hero-muted)}
+.hero-bottom{padding:24px clamp(22px,4.5vw,56px) clamp(22px,4vw,40px)}
+@media (max-width:760px){
+  .shards{width:150%;right:-25%;opacity:.55}
+  .hero::before{background:linear-gradient(0deg,rgba(12,10,20,.97) 10%,rgba(12,10,20,.6) 60%,rgba(12,10,20,.35))}
+  .shard figcaption{display:none}
+}
+@media (prefers-reduced-motion:no-preference){
+  .shard{animation:shardIn .9s cubic-bezier(.2,.7,.2,1) both}
+  .shard:nth-child(2){animation-delay:.08s}.shard:nth-child(3){animation-delay:.16s}.shard:nth-child(4){animation-delay:.24s}.shard:nth-child(5){animation-delay:.32s}
+  @keyframes shardIn{from{transform:translateY(-18px)}to{transform:none}}
+}
 .facts{display:flex;flex-wrap:wrap;gap:8px 22px;font:500 13px var(--f-mono);margin:0 0 22px;padding:0;list-style:none}
 .facts b{color:var(--accent);font-variant-numeric:tabular-nums}
 .btn-row{display:flex;flex-wrap:wrap;gap:10px}
@@ -99,7 +124,7 @@ h1,h2,h3{text-wrap:balance}
 .btn.primary{background:var(--accent);color:var(--accent-ink)}
 
 .section-title{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:8px 0 6px}
-.section-title h2{font-family:var(--f-display);font-weight:400;font-size:1.7rem;margin:0}
+.section-title h2{font-family:var(--f-display);font-weight:600;font-size:1.7rem;margin:0}
 .section-sub{font-family:var(--f-body);color:var(--muted);margin:0 0 16px;max-width:70ch}
 
 /* load state */
@@ -120,11 +145,11 @@ h1,h2,h3{text-wrap:balance}
 .why span{color:var(--novel);font:500 12.5px var(--f-ui)}
 .tag .raw{display:block;font-size:11px;color:var(--muted)}
 .goals{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:12px;margin:4px 0 0;padding:0;list-style:none}
-.goal{display:flex;flex-direction:column;gap:4px;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:14px 16px;text-decoration:none;color:var(--ink);height:100%}
-.goal:hover{border-color:var(--accent)}
-.goal small{font:500 12px var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
-.goal strong{font:600 16px var(--f-ui);color:var(--accent)}
-.goal span{font-family:var(--f-body);font-size:.98rem;color:var(--muted)}
+.goal{display:flex;flex-direction:column;gap:4px;background:rgba(22,18,38,.62);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border:1px solid rgba(201,194,230,.22);border-radius:12px;padding:14px 16px;text-decoration:none;color:var(--hero-ink);height:100%;transition:border-color .2s,transform .2s}
+.goal:hover{border-color:var(--hero-glow);transform:translateY(-2px)}
+.goal small{font:500 11.5px var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--hero-gold)}
+.goal strong{font:700 17px var(--f-display);letter-spacing:.03em;color:#fff}
+.goal span{font-family:var(--f-body);font-size:.98rem;color:var(--hero-muted)}
 .themes{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,200px),1fr));gap:10px;margin:0 0 36px}
 .theme-btn{display:flex;justify-content:space-between;align-items:baseline;gap:8px;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px;cursor:pointer;color:var(--ink);font:600 15px var(--f-ui)}
 .theme-btn:hover{border-color:var(--accent)}
@@ -171,13 +196,13 @@ td .cardlinks{display:flex;flex-wrap:wrap;gap:4px 10px;font-size:14px}
 
 /* pairs */
 .pair{display:grid;grid-template-columns:minmax(0,1fr) 28px minmax(0,1fr);gap:14px;align-items:start;margin-bottom:34px;max-width:620px}
-.pair h2{grid-column:1/-1;font-family:var(--f-display);font-weight:400;font-size:1.4rem;margin:0}
+.pair h2{grid-column:1/-1;font-family:var(--f-display);font-weight:600;font-size:1.4rem;margin:0}
 .pair svg{width:28px;height:100%;min-height:200px;align-self:stretch}
 .pairs-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,460px),1fr));gap:8px 40px}
 
 /* mechanics */
 .mech{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:22px;align-items:start;padding:24px 0;border-top:1px solid var(--line)}
-.mech h2{font-family:var(--f-display);font-weight:400;font-size:1.6rem;margin:0 0 6px}
+.mech h2{font-family:var(--f-display);font-weight:600;font-size:1.6rem;margin:0 0 6px}
 .mech .kind{font:500 12px var(--f-mono);color:var(--accent);letter-spacing:.1em;text-transform:uppercase}
 .mech .reminder{font-family:var(--f-body);font-style:italic;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin:10px 0}
 .mini-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
@@ -188,7 +213,7 @@ dialog{border:1px solid var(--line);border-radius:14px;padding:0;background:var(
 dialog::backdrop{background:rgba(12,10,20,.6)}
 .dlg{display:grid;grid-template-columns:minmax(0,320px) minmax(0,1fr);gap:24px;padding:22px;overflow:auto;max-height:calc(100vh - 26px)}
 .dlg-close{position:absolute;top:10px;right:10px;background:var(--surface-2);border:1px solid var(--line);color:var(--ink);border-radius:999px;width:36px;height:36px;font-size:18px;cursor:pointer}
-.dlg h2{font-family:var(--f-display);font-weight:400;font-size:1.7rem;margin:0 40px 4px 0}
+.dlg h2{font-family:var(--f-display);font-weight:600;font-size:1.7rem;margin:0 40px 4px 0}
 .dlg .type{font:500 13px var(--f-ui);color:var(--muted);margin:0 0 12px}
 .oracle{font-family:var(--f-body);font-size:1.02rem;white-space:pre-line;margin:0 0 12px}
 .face + .face{border-top:1px solid var(--line);padding-top:12px}
@@ -222,19 +247,24 @@ dialog::backdrop{background:rgba(12,10,20,.6)}
      ===================================================================== -->
 <section data-page="home" data-title="Spotlight">
   <div class="hero">
-    <p class="eyebrow">Reality Fracture · FRA · released Oct 2, 2026</p>
-    <h1>The new cards worth a second look</h1>
-    <p>Reality Fracture added 280 cards in one go. This site picks out the ones that do something Magic has rarely or never done, and says in plain words what that is.</p>
+    <div class="shards" id="heroShards" aria-hidden="false"></div>
+    <div class="hero-inner">
+    <p class="eyebrow">Reality Fracture · FRA · out now</p>
+    <h1>The new cards worth a <em>second look</em></h1>
+    <p class="lead">Reality Fracture added 280 cards in one go. This site picks out the ones that do something Magic has rarely or never done, and says in plain words what that is.</p>
     <ul class="facts">
       <li>Cards <b id="fCards">–</b></li>
       <li>Distinct tags <b id="fTags">–</b></li>
       <li>Rare effects (20 or fewer cards ever) <b id="fFirsts">–</b></li>
     </ul>
+    </div>
+    <div class="hero-bottom">
     <ul class="goals">
       <li><a class="goal" href="#themes"><small>Building a deck</small><strong>Browse by deck theme</strong><span>Find new cards for graveyard, counters, tokens and more.</span></a></li>
       <li><a class="goal" href="#start"><small>Just curious</small><strong>Start with the strangest 8</strong><span>The cards with effects almost nothing else has.</span></a></li>
       <li><a class="goal" href="#pairs"><small>Here for the characters</small><strong>See the Echoed Pairs</strong><span>Familiar faces, each printed as two versions.</span></a></li>
     </ul>
+    </div>
   </div>
   <div class="section-title" id="themes"><h2>Browse by deck theme</h2><a href="#cards">All cards</a></div>
   <p class="section-sub">Pick the kind of deck you're building to see the new cards that support it, most unusual first.</p>
@@ -513,6 +543,25 @@ const SNAP = /*SNAPSHOT*/{"date":"October 21, 2026","tags":["1mv-tutor-to-top","
     '</div>';
   }
 
+  /* ---------- hero art ---------- */
+  const HERO = [
+    {name:"The Theorist, Jace Beleren", label:"Jace"},
+    {name:"Chandra, Chill of Compliance", label:"Chandra"},
+    {name:"Emrakul, the Exigent Doom", label:"Emrakul"},
+    {name:"Liliana the Repentant", label:"Liliana"},
+    {name:"Ajani Unrelenting", label:"Ajani"}
+  ];
+  const shardBox = $("heroShards");
+  shardBox.innerHTML = HERO.map(() => '<figure class="shard"></figure>').join("");
+  function renderHero(){
+    shardBox.innerHTML = HERO.map(h => {
+      const x = byName[h.name]; if (!x) return '<figure class="shard"></figure>';
+      const art = (x.c.image_uris && x.c.image_uris.art_crop) || (x.c.card_faces && x.c.card_faces[0].image_uris && x.c.card_faces[0].image_uris.art_crop) || "";
+      return '<figure class="shard"><button type="button" class="tile-btn" data-open="' + esc(x.num) + '" aria-label="Show ' + esc(x.name) + '" style="position:absolute;inset:0;border-radius:0;cursor:pointer"><img src="' + esc(art) + '" alt="' + esc(x.name) + ' artwork"></button>' +
+        '<figcaption><b>' + esc(h.label) + '</b>Art: ' + esc(x.c.artist || "") + '</figcaption></figure>';
+    }).join("");
+  }
+
   /* ---------- spotlight ---------- */
   function renderSpotlight(){
     const top = CARDS.slice().sort((a,b) => b.score - a.score || a.num.localeCompare(b.num, undefined, {numeric:true})).slice(0, 8);
@@ -652,7 +701,7 @@ const SNAP = /*SNAPSHOT*/{"date":"October 21, 2026","tags":["1mv-tutor-to-top","
     if (location.hash === "#cards") route(); else location.hash = "cards";
   });
 
-  function renderAll(){ renderSpotlight(); renderGallery(); renderTags(); renderPairs(); renderMech(); }
+  function renderAll(){ renderHero(); renderSpotlight(); renderGallery(); renderTags(); renderPairs(); renderMech(); }
   load();
 })();
 </script>
