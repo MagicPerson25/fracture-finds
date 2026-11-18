@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <!--
   CHANGE LOG
+  2026-11-18  Clarity pass (Hit/Miss and False Alarm tests): plain headline, fan-site label, one main button, live example, clearer nav names, price source, meta tags.
   2026-11-11  Redesign: fractured character-art banner, Cinzel display type, glass entry cards.
   2026-11-11  User-research update: plain-English tag names, "why it's unusual" line, browse by deck theme, goal-based entry points.
   2026-10-21  Live version: card data and images load from Scryfall when opened; Tagger tags snapshot from 2026-10-21.
@@ -9,7 +10,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Fracture Finds</title>
+<title>Fracture Finds · Unusual Magic cards from Reality Fracture</title>
+<meta name="description" content="Unofficial Magic: The Gathering fan site. Browse all 280 cards of Reality Fracture and see which ones do something Magic has rarely or never done, explained in plain words.">
+<meta property="og:title" content="Fracture Finds · Unusual Magic cards from Reality Fracture">
+<meta property="og:description" content="Unofficial fan site: every Reality Fracture card, with the most unusual ones explained in plain words.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://magicperson25.github.io/fracture-finds/">
+<meta property="og:image" content="https://magicperson25.github.io/fracture-finds/assets/before-after.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800&family=Marcellus+SC&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
@@ -106,6 +113,13 @@ h1,h2,h3{text-wrap:balance}
 .hero p.lead{font-family:var(--f-body);font-size:1.15rem;line-height:1.55;max-width:46ch;margin:0 0 18px;color:var(--hero-muted)}
 .hero .facts b{color:var(--hero-gold)}
 .hero .facts{color:var(--hero-muted)}
+.hero .example{font-family:var(--f-body);font-size:1.02rem;color:var(--hero-ink);max-width:52ch;margin:0 0 20px;padding:10px 14px;border-left:3px solid var(--hero-gold);background:rgba(22,18,38,.55);border-radius:0 8px 8px 0}
+.hero .example:empty{display:none}
+.hero .example b{color:var(--hero-gold);font-weight:600}
+.hero-cta{background:var(--hero-gold);border-color:var(--hero-gold);color:#1b1526;font-size:15px;padding:12px 20px}
+.hero-cta:hover{filter:brightness(1.08)}
+.goals-label{font:500 12px var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--hero-muted);margin:0 0 10px}
+@media (max-width:760px){.goal span{display:none}.hero .lead{font-size:1.02rem}.hero .example{font-size:.95rem}}
 .hero-bottom{padding:24px clamp(22px,4.5vw,56px) clamp(22px,4vw,40px)}
 @media (max-width:760px){
   .shards{width:150%;right:-25%;opacity:.55}
@@ -249,20 +263,18 @@ dialog::backdrop{background:rgba(12,10,20,.6)}
   <div class="hero">
     <div class="shards" id="heroShards" aria-hidden="false"></div>
     <div class="hero-inner">
-    <p class="eyebrow">Reality Fracture · FRA · out now</p>
-    <h1>The new cards worth a <em>second look</em></h1>
-    <p class="lead">Reality Fracture added 280 cards in one go. This site picks out the ones that do something Magic has rarely or never done, and says in plain words what that is.</p>
-    <ul class="facts">
-      <li>Cards <b id="fCards">–</b></li>
-      <li>Distinct tags <b id="fTags">–</b></li>
-      <li>Rare effects (20 or fewer cards ever) <b id="fFirsts">–</b></li>
-    </ul>
+    <p class="eyebrow">Unofficial Magic: The Gathering fan site</p>
+    <h1>The <em>most unusual</em> cards in Magic's newest set</h1>
+    <p class="lead">A guide to Reality Fracture, the 280-card set released in October 2026. Browse every card, or see which ones do something Magic has rarely or never done, explained in plain words.</p>
+    <p class="example" id="heroExample"></p>
+    <div class="btn-row"><a class="btn hero-cta" href="#cards">Browse all <span id="fCards">280</span> cards</a></div>
     </div>
     <div class="hero-bottom">
+    <p class="goals-label">Or start with what you're here for</p>
     <ul class="goals">
       <li><a class="goal" href="#themes"><small>Building a deck</small><strong>Browse by deck theme</strong><span>Find new cards for graveyard, counters, tokens and more.</span></a></li>
       <li><a class="goal" href="#start"><small>Just curious</small><strong>Start with the strangest 8</strong><span>The cards with effects almost nothing else has.</span></a></li>
-      <li><a class="goal" href="#pairs"><small>Here for the characters</small><strong>See the Echoed Pairs</strong><span>Familiar faces, each printed as two versions.</span></a></li>
+      <li><a class="goal" href="#pairs"><small>Here for the characters</small><strong>See characters printed twice</strong><span>The "Echoed Pairs": familiar faces in two versions.</span></a></li>
     </ul>
     </div>
   </div>
@@ -294,7 +306,7 @@ dialog::backdrop{background:rgba(12,10,20,.6)}
   <div class="grid" id="galleryGrid"></div>
 </section>
 
-<section data-page="tags" data-title="Tag Explorer">
+<section data-page="tags" data-title="Effect Explorer">
   <div class="page-head">
     <p class="eyebrow">Tag explorer</p>
     <h1>Which effects are new?</h1>
@@ -311,7 +323,7 @@ dialog::backdrop{background:rgba(12,10,20,.6)}
   </table></div>
 </section>
 
-<section data-page="pairs" data-title="Echoed Pairs">
+<section data-page="pairs" data-title="Character Pairs">
   <div class="page-head">
     <p class="eyebrow">Echoed Pairs</p>
     <h1>Same character, two realities</h1>
@@ -320,7 +332,7 @@ dialog::backdrop{background:rgba(12,10,20,.6)}
   <div class="pairs-list" id="pairsList"></div>
 </section>
 
-<section data-page="mechanics" data-title="Mechanics">
+<section data-page="mechanics" data-title="New Rules">
   <div class="page-head">
     <p class="eyebrow">Mechanics</p>
     <h1>What's new in the rules</h1>
@@ -409,7 +421,7 @@ const SNAP = /*SNAPSHOT*/{"date":"October 21, 2026","tags":["1mv-tutor-to-top","
     if (!page) page = pages[0];
     pages.forEach(p => p.classList.toggle("is-active", p === page));
     navList.querySelectorAll("a").forEach(a => a.getAttribute("href") === "#" + page.dataset.page ? a.setAttribute("aria-current","page") : a.removeAttribute("aria-current"));
-    document.title = page.dataset.title + " · " + SITE_NAME;
+    document.title = page === pages[0] ? SITE_NAME + " · Unusual Magic cards from Reality Fracture" : page.dataset.title + " · " + SITE_NAME;
     setMenu(false);
     if (anchor) anchor.scrollIntoView(); else window.scrollTo(0,0);
   }
@@ -570,8 +582,10 @@ const SNAP = /*SNAPSHOT*/{"date":"October 21, 2026","tags":["1mv-tutor-to-top","
     $("spotlightGrid").innerHTML = top.map(x => tileHTML(x)).join("");
     const setTags = new Set(CARDS.flatMap(x => x.tags));
     $("fCards").textContent = CARDS.length;
-    $("fTags").textContent = setTags.size;
-    $("fFirsts").textContent = Array.from(setTags).filter(isNovel).length;
+    const ex = top.find(x => x.novel.length);
+    if (ex){ const t = ex.novel[0], others = globalCount[t] - 1, l = label(t);
+      $("heroExample").innerHTML = 'For example, <b>' + esc(ex.name) + '</b>: ' + esc(l.charAt(0).toLowerCase() + l.slice(1)) + '. ' +
+        (others === 0 ? 'No other card in Magic does this.' : others === 1 ? 'Only 1 other card in Magic does this.' : 'Only ' + others + ' other cards in Magic do this.'); }
   }
 
   /* ---------- gallery ---------- */
@@ -671,7 +685,7 @@ const SNAP = /*SNAPSHOT*/{"date":"October 21, 2026","tags":["1mv-tutor-to-top","
     $("dlgBody").innerHTML =
       '<div class="imgcol"><img class="cardimg" src="' + esc(imgOf(c, "large") || imgOf(c)) + '" alt="' + esc(x.name) + '"></div>' +
       '<div><h2 id="dlgTitle">' + esc(x.name) + '</h2>' +
-      '<p class="type">#' + esc(x.num) + ' · ' + esc(c.rarity) + (price ? ' · $' + esc(c.prices.usd || "") + (c.prices.usd ? "" : "€" + esc(c.prices.eur)) : '') + (x.score ? ' · <span class="score">' + tierOf(x.score) + '</span>' : '') + '</p>' + whyHTML(x) +
+      '<p class="type">#' + esc(x.num) + ' · ' + esc(c.rarity) + (price ? ' · ' + (c.prices.usd ? '$' + esc(c.prices.usd) : '€' + esc(c.prices.eur)) + ' market price (Scryfall)' : '') + (x.score ? ' · <span class="score">' + tierOf(x.score) + '</span>' : '') + '</p>' + whyHTML(x) +
       faces.map(f => '<div class="face">' + (faces.length > 1 ? '<h3>' + esc(f.name) + ' ' + pips(f.mana_cost || "") + '</h3>' : '<p class="type">' + pips(f.mana_cost || "") + ' &nbsp;' + esc(f.type_line) + '</p>') +
         (faces.length > 1 ? '<p class="type">' + esc(f.type_line) + '</p>' : '') +
         '<p class="oracle">' + pips(f.oracle_text || "") + '</p>' +
