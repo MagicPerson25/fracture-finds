@@ -119,7 +119,7 @@ h1,h2,h3{text-wrap:balance}
 .hero .btn.hero-cta{background:var(--hero-gold);border-color:var(--hero-gold);color:#1b1526;font-size:15px;padding:12px 20px}
 .hero .btn.hero-cta:hover{filter:brightness(1.08)}
 .goals-label{font:500 12px var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--hero-muted);margin:0 0 10px}
-@media (max-width:760px){.goal span{display:none}.hero .lead{font-size:1.02rem}.hero .example{font-size:.95rem}}
+@media (max-width:760px){.goal span,.lead-more{display:none}.hero .lead{font-size:1.02rem;margin-bottom:12px}.hero .example{font-size:.93rem;margin-bottom:14px}.hero h1{font-size:1.85rem;margin-bottom:12px}.goals{gap:8px}.goal{padding:10px 14px}.goal strong{font-size:15px}.hero-bottom{padding-top:14px}}
 .hero-bottom{padding:18px clamp(22px,4.5vw,56px) clamp(22px,4vw,40px)}
 @media (max-width:760px){
   .shards{width:150%;right:-25%;opacity:.55}
@@ -265,7 +265,7 @@ dialog::backdrop{background:rgba(12,10,20,.6)}
     <div class="hero-inner">
     <p class="eyebrow">Unofficial Magic: The Gathering fan site</p>
     <h1>The <em>most unusual</em> cards in Magic's newest set</h1>
-    <p class="lead">A guide to Reality Fracture, the 280-card set released in October 2026. Browse every card, or see which ones do something Magic has rarely or never done, explained in plain words.</p>
+    <p class="lead">A guide to Reality Fracture, the 280-card set released in October 2026.<span class="lead-more"> Browse every card, or see which ones do something Magic has rarely or never done, explained in plain words.</span></p>
     <p class="example" id="heroExample"></p>
     <div class="btn-row"><a class="btn hero-cta" href="#cards">Browse all <span id="fCards">280</span> cards</a></div>
     </div>
